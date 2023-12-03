@@ -6,10 +6,12 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.openftc.apriltag.AprilTagDetection;
@@ -18,11 +20,12 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
+
 import java.util.Timer;
 
-@Autonomous(name="COMP1 AUTO_RED", group="cvAutos")
+@Autonomous(name="COMP1 AUTO_BLUE", group="cvAutos")
 //RED TOP STARTING PLACE
-public class AutoTest extends LinearOpMode {
+public class AutoTest2 extends LinearOpMode {
 
     double CIRCUMFERENCEOFWHEEL = 298.5; //mm
     double ENCODERTICKS = 537.7;
@@ -33,20 +36,25 @@ public class AutoTest extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        DcMotor fl = null;
-        DcMotor fr = null;
-        DcMotor bl = null;
-        DcMotor br = null;
+        DcMotorEx fl = null;
+        DcMotorEx fr = null;
+        DcMotorEx bl = null;
+        DcMotorEx br = null;
 
         Timer timer = new Timer();
 
-        fl = hardwareMap.dcMotor.get("front_left_motor");
-        fr = hardwareMap.dcMotor.get("back_right_motor");
-        bl = hardwareMap.dcMotor.get("back_left_motor");
-        br = hardwareMap.dcMotor.get("front_right_motor");
+        fl = hardwareMap.get(DcMotorEx.class, "front_left_motor");
+        fr = hardwareMap.get(DcMotorEx.class,  "front_right_motor");
+        bl = hardwareMap.get(DcMotorEx.class, "back_left_motor");
+        br = hardwareMap.get(DcMotorEx.class, "back_right_motor");
 
-        fr.setDirection(DcMotorSimple.Direction.REVERSE);
-        bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
+        fl.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* Pose2d startPose = new Pose2d(0, 0);
 
@@ -63,15 +71,15 @@ public class AutoTest extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            fl.setPower(0.1);
-            fr.setPower(-0.1);
-            bl.setPower(-0.1);
-            br.setPower(0.1);
-            sleep(500);
-            fl.setPower(0);
-            fr.setPower(0);
-            bl.setPower(0);
-            br.setPower(0);
+            fl.setPower(0.5);
+            // fr.setVelocity(1, AngleUnit.RADIANS);
+            // bl.setVelocity(1, AngleUnit.RADIANS);
+            // br.setVelocity(1, AngleUnit.RADIANS);
+            sleep(10000);
+            fl.setVelocity(0);
+            fr.setVelocity(0);
+            bl.setVelocity(0);
+            br.setVelocity(0);
         }
     }
 }

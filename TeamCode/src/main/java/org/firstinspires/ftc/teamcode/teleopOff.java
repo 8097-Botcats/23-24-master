@@ -82,7 +82,7 @@ public class teleopOff extends LinearOpMode {
 
         myIMUparameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                         RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 )
         );
@@ -90,6 +90,7 @@ public class teleopOff extends LinearOpMode {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters); */
+        imu.initialize(myIMUparameters);
 
         telemetry.addData("Status", "Initalized");
         telemetry.update();
@@ -209,7 +210,7 @@ public class teleopOff extends LinearOpMode {
                 }
             }
             if(gamepad1.dpad_right) {
-                outtake.setPosition(1);
+                outtake.setPosition(0.85);
             }
 
 

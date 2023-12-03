@@ -27,23 +27,22 @@ public class teleopOff2 extends LinearOpMode {
         DcMotor fr = hardwareMap.dcMotor.get("front_right_motor");
         DcMotor bl = hardwareMap.dcMotor.get("back_left_motor");
         DcMotor br = hardwareMap.dcMotor.get("back_right_motor");
-        // DcMotor lift1 = hardwareMap.dcMotor.get("liftMotor1");
-        // DcMotor lift2 = hardwareMap.dcMotor.get("liftMotor2");
-        //fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        DcMotor fourBar = hardwareMap.dcMotor.get("4bar_motor");
+
+        double ENCODERTICKS = 537.7;
+
+        CRServo back_left_servo = hardwareMap.crservo.get("back_left_servo");
+        CRServo back_right_servo = hardwareMap.crservo.get("back_right_servo");
+        CRServo front_left_servo = hardwareMap.crservo.get("front_left_servo");
+        CRServo front_right_servo = hardwareMap.crservo.get("front_right_servo");
+
+        Servo outtake = hardwareMap.servo.get("4bar_servo");
+
+        fl.setDirection(DcMotorSimple.Direction.REVERSE);
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
-        //bl.setDirection(DcMotorSimple.Direction.REVERSE);
-        br.setDirection(DcMotorSimple.Direction.REVERSE);
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        /* lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); */
-
-        Servo clawServo = hardwareMap.servo.get("clawServo");
+        fourBar.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         double driveSpeed = 0.4;
         final int liftHome = 0;
@@ -51,9 +50,12 @@ public class teleopOff2 extends LinearOpMode {
         double finalAngle;
         double robotAngle;
         boolean speedToggle = true;
+        boolean aButton = true;
         boolean yButton = true;
         boolean xButton = true;
         boolean bButton = true;
+
+        double slowRelease = 0.3;
 
         double liftEncoder = 0;
 
@@ -65,7 +67,7 @@ public class teleopOff2 extends LinearOpMode {
 
         myIMUparameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                         RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 )
         );
@@ -73,6 +75,8 @@ public class teleopOff2 extends LinearOpMode {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters); */
+        imu.initialize(myIMUparameters);
+        imu.resetYaw();
 
         telemetry.addData("Status", "Initalized");
         telemetry.update();
@@ -96,7 +100,7 @@ public class teleopOff2 extends LinearOpMode {
                 yButton = true;
             }
 
-            angles = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+            angles = imu.getRobotOrientation(AxesReference.EXTRINSIC, AxesOrder.ZXY, AngleUnit.RADIANS);
             robotAngle = angles.firstAngle;
 
             double r = Math.hypot(-gamepad1.left_stick_x, gamepad1.left_stick_y); //finds hypotenuse (power of each motor)
@@ -127,42 +131,59 @@ public class teleopOff2 extends LinearOpMode {
             bl.setPower(v3);
             br.setPower(v4);
 
-            if((gamepad2.right_trigger > 0) && gamepad2.left_trigger == 0){
-                // lift1.setPower(gamepad2.right_trigger);
-                // lift2.setPower(-gamepad2.right_trigger);
+            // DRIVER 2
+
+            if(gamepad2.left_stick_y != 0){
+                fourBar.setPower(gamepad2.left_stick_x/2);
             }
-            if((gamepad2.left_trigger > 0) && gamepad2.right_trigger == 0){
-                // lift1.setPower(-gamepad2.left_trigger);
-                // lift2.setPower(gamepad2.left_trigger);
+            else if(gamepad2.left_trigger > 0) {
+                fourBar.setPower(-0.3);
             }
-            if(gamepad2.right_trigger == 0 && gamepad2.left_trigger == 0){
-                // lift1.setPower(0);
-                // lift2.setPower(0);
+            else {
+                fourBar.setPower(0);
+            }
+
+            /* if (gamepad2.a && aButton){
+                aButton = false;
+                if(slowRelease == 1){
+                    slowRelease = 0.3;
+                }
+                if(slowRelease == 0.3){
+                    slowRelease = 1;
+                }
+            }
+            if (!gamepad2.a && !aButton) {
+                aButton = true;
+            } */
+
+            if(gamepad2.right_bumper) {
+                front_left_servo.setPower(-1);
+                front_right_servo.setPower(1);
+                back_left_servo.setPower(-1);
+                back_right_servo.setPower(1);
+            }
+            if(gamepad2.left_bumper) {
+                front_left_servo.setPower(1);
+                front_right_servo.setPower(-1);
+                back_left_servo.setPower(1);
+                back_right_servo.setPower(-1);
+            }
+            if(!gamepad2.right_bumper && !gamepad2.left_bumper) {
+                front_left_servo.setPower(0);
+                front_right_servo.setPower(0);
+                back_left_servo.setPower(0);
+                back_right_servo.setPower(0);
             }
 
 
-            if (gamepad2.x && xButton) {
-                telemetry.addData("flag 1", "entered gamepad1x&&xbutton loop");
-                telemetry.update();
-                xButton = false;
-                clawServo.setPosition(.3);
+            if (gamepad2.x) {
+                outtake.setPosition(0.05);
             }
-            if (!gamepad2.x && !xButton) {
-                telemetry.addData("flag 2", "entered !gamepad1x&&!xbutton loop");
-                telemetry.update();
-                xButton = true;
+            if (gamepad2.b) {
+                outtake.setPosition(0.9);
             }
-
-            if (gamepad2.b && bButton) {
-                telemetry.addData("flag 3", "entered gamepad1b&&bbutton loop");
-                telemetry.update();
-                bButton = false;
-                clawServo.setPosition(.1);
-            }
-            if(!gamepad2.b && !bButton){
-                telemetry.addData("flag 4", "entered !gamepad1b&&b!button loop");
-                telemetry.update();
-                bButton = true;
+            if(gamepad2.y) {
+                outtake.setPosition(0.5);
             }
 
             telemetry.addData("Drive Speed", driveSpeed);

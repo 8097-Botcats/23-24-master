@@ -127,7 +127,8 @@ public class Robot {
 
         driveForward(power);
 
-        while(fl.isBusy() && fr.isBusy() && bl.isBusy() && br.isBusy()) {
+        while(fl.isBusy() && bl.isBusy() && br.isBusy()) {
+
         }
 
         stopDriving();
@@ -222,10 +223,10 @@ public class Robot {
         br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void driveForward(double power) {
-        fl.setPower(-power);
-        fr.setPower(-power);
-        bl.setPower(-power);
-        br.setPower(-power);
+        fl.setPower(power);
+        fr.setPower(power);
+        bl.setPower(power);
+        br.setPower(power);
     }
     public void driveBack(double power){
         fl.setPower(power);
