@@ -34,24 +34,20 @@ public class AutoTest2 extends LinearOpMode {
 
     public void runOpMode() {
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
-        DcMotorEx fl = null;
-        DcMotorEx fr = null;
-        DcMotorEx bl = null;
-        DcMotorEx br = null;
-
-        Timer timer = new Timer();
+        DcMotor fl = null;
+        DcMotor fr = null;
+        DcMotor bl = null;
+        DcMotor br = null;
 
         fl = hardwareMap.get(DcMotorEx.class, "front_left_motor");
-        fr = hardwareMap.get(DcMotorEx.class,  "front_right_motor");
+        fr = hardwareMap.get(DcMotorEx.class, "front_right_motor");
         bl = hardwareMap.get(DcMotorEx.class, "back_left_motor");
         br = hardwareMap.get(DcMotorEx.class, "back_right_motor");
 
-        fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         br.setDirection(DcMotorSimple.Direction.REVERSE);
         fl.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -72,14 +68,14 @@ public class AutoTest2 extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             fl.setPower(0.5);
-            // fr.setVelocity(1, AngleUnit.RADIANS);
-            // bl.setVelocity(1, AngleUnit.RADIANS);
-            // br.setVelocity(1, AngleUnit.RADIANS);
-            sleep(10000);
-            fl.setVelocity(0);
-            fr.setVelocity(0);
-            bl.setVelocity(0);
-            br.setVelocity(0);
+            fr.setPower(0.5);
+            bl.setPower(0.5);
+            br.setPower(0.5);
+            sleep(2000);
+            fl.setPower(0);
+            fr.setPower(0);
+            bl.setPower(0);
+            br.setPower(0);
         }
     }
 }
