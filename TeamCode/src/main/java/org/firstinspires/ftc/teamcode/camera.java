@@ -46,6 +46,7 @@ public class camera extends OpenCvPipeline {
      */
     public final Scalar BLUE = new Scalar(0, 0, 255);
     public final Scalar GREEN = new Scalar(0, 255, 0);
+    public final Scalar RED = new Scalar(255, 0, 0);
 
     /*
      * The core values which define the location and size of the sample regions
@@ -96,13 +97,14 @@ public class camera extends OpenCvPipeline {
     /*
      * Working variables
      */
-    Mat region1_Cb, region2_Cb, region3_Cb;
-    Mat YCrCb = new Mat();
-    Mat Cb = new Mat();
+    Mat region1_Hue, region2_Hue, region3_Hue;
+    Mat HSV = new Mat();
+    Mat Hue = new Mat();
     int avg1, avg2, avg3;
 
     // Volatile since accessed by OpMode thread w/o synchronization
-    private volatile SkystonePosition position = SkystonePosition.LEFT;
+    private volatile SkystonePosition redPosition = SkystonePosition.LEFT;
+    private volatile SkystonePosition bluePosition = SkystonePosition.LEFT;
 
     private Telemetry telemetry;
 
@@ -114,10 +116,10 @@ public class camera extends OpenCvPipeline {
      * This function takes the RGB frame, converts to YCrCb,
      * and extracts the Cb channel to the 'Cb' variable
      */
-    void inputToCb(Mat input)
+    void inputToHue(Mat input)
     {
-        Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-        Core.extractChannel(YCrCb, Cb, 2);
+        Imgproc.cvtColor(input, HSV, Imgproc.COLOR_RGB2HSV);
+        Core.extractChannel(HSV, Hue, 0);
     }
 
     @Override
@@ -131,16 +133,16 @@ public class camera extends OpenCvPipeline {
          * buffer would be re-allocated the first time a real frame
          * was crunched)
          */
-        inputToCb(firstFrame);
+        inputToHue(firstFrame);
 
         /*
          * Submats are a persistent reference to a region of the parent
          * buffer. Any changes to the child affect the parent, and the
          * reverse also holds true.
          */
-        region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
-        region2_Cb = Cb.submat(new Rect(region2_pointA, region2_pointB));
-        region3_Cb = Cb.submat(new Rect(region3_pointA, region3_pointB));
+        region1_Hue = Hue.submat(new Rect(region1_pointA, region1_pointB));
+        region2_Hue = Hue.submat(new Rect(region2_pointA, region2_pointB));
+        region3_Hue = Hue.submat(new Rect(region3_pointA, region3_pointB));
     }
 
     @Override
@@ -183,7 +185,8 @@ public class camera extends OpenCvPipeline {
         /*
          * Get the Cb channel of the input frame after conversion to YCrCb
          */
-        inputToCb(input);
+
+        inputToHue(input);
 
         /*
          * Compute the average pixel value of each submat region. We're
@@ -192,9 +195,9 @@ public class camera extends OpenCvPipeline {
          * pixel value of the 3-channel image, and referenced the value
          * at index 2 here.
          */
-        avg1 = (int) Core.mean(region1_Cb).val[0];
-        avg2 = (int) Core.mean(region2_Cb).val[0];
-        avg3 = (int) Core.mean(region3_Cb).val[0];
+        avg1 = (int) Core.mean(region1_Hue).val[0];
+        avg2 = (int) Core.mean(region2_Hue).val[0];
+        avg3 = (int) Core.mean(region3_Hue).val[0];
 
         /*
          * Draw a rectangle showing sample region 1 on the screen.
@@ -204,7 +207,7 @@ public class camera extends OpenCvPipeline {
                 input, // Buffer to draw on
                 region1_pointA, // First point which defines the rectangle
                 region1_pointB, // Second point which defines the rectangle
-                BLUE, // The color the rectangle is drawn in
+                GREEN, // The color the rectangle is drawn in
                 2); // Thickness of the rectangle lines
 
         /*
@@ -215,7 +218,7 @@ public class camera extends OpenCvPipeline {
                 input, // Buffer to draw on
                 region2_pointA, // First point which defines the rectangle
                 region2_pointB, // Second point which defines the rectangle
-                BLUE, // The color the rectangle is drawn in
+                GREEN, // The color the rectangle is drawn in
                 2); // Thickness of the rectangle lines
 
         /*
@@ -226,23 +229,31 @@ public class camera extends OpenCvPipeline {
                 input, // Buffer to draw on
                 region3_pointA, // First point which defines the rectangle
                 region3_pointB, // Second point which defines the rectangle
-                BLUE, // The color the rectangle is drawn in
+                GREEN, // The color the rectangle is drawn in
                 2); // Thickness of the rectangle lines
 
 
         /*
          * Find the max of the 3 averages
          */
-        int minOneTwo = Math.min(avg1, avg2);
-        int min = Math.min(minOneTwo, avg3);
+        int maxRedOneTwo = Math.min(avg1, avg2);
+        int maxRed = Math.min(maxRedOneTwo, avg3);
+
+        int blueAvg1 = Math.abs((int) 270 - avg1);
+        int blueAvg2 = Math.abs((int) 270 - avg2);
+        int blueAvg3 = Math.abs((int) 270 - avg3);
+
+        int maxBlueOneTwo = Math.min(blueAvg1, blueAvg2);
+        int maxBlue = Math.min(maxBlueOneTwo, blueAvg3);
 
         /*
          * Now that we found the max, we actually need to go and
          * figure out which sample region that value was from
          */
-        if(min == avg1) // Was it from region 1?
+
+        if(maxRed == avg1) // Was it from region 1?
         {
-            position = SkystonePosition.LEFT; // Record our analysis
+            redPosition = SkystonePosition.LEFT; // Record our analysis
 
             /*
              * Draw a solid rectangle on top of the chosen region.
@@ -252,12 +263,12 @@ public class camera extends OpenCvPipeline {
                     input, // Buffer to draw on
                     region1_pointA, // First point which defines the rectangle
                     region1_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
+                    RED, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(min == avg2) // Was it from region 2?
+        else if(maxRed == avg2) // Was it from region 2?
         {
-            position = SkystonePosition.CENTER; // Record our analysis
+            redPosition = SkystonePosition.CENTER; // Record our analysis
 
             /*
              * Draw a solid rectangle on top of the chosen region.
@@ -267,12 +278,12 @@ public class camera extends OpenCvPipeline {
                     input, // Buffer to draw on
                     region2_pointA, // First point which defines the rectangle
                     region2_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
+                    RED, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(min == avg3) // Was it from region 3?
+        else if(maxRed == avg3) // Was it from region 3?
         {
-            position = SkystonePosition.RIGHT; // Record our analysis
+            redPosition = SkystonePosition.RIGHT; // Record our analysis
 
             /*
              * Draw a solid rectangle on top of the chosen region.
@@ -282,7 +293,53 @@ public class camera extends OpenCvPipeline {
                     input, // Buffer to draw on
                     region3_pointA, // First point which defines the rectangle
                     region3_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
+                    RED, // The color the rectangle is drawn in
+                    -1); // Negative thickness means solid fill
+        }
+
+        if(maxBlue == blueAvg1) // Was it from region 1?
+        {
+            bluePosition = SkystonePosition.LEFT; // Record our analysis
+
+            /*
+             * Draw a solid rectangle on top of the chosen region.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    -1); // Negative thickness means solid fill
+        }
+        else if(maxBlue == blueAvg2) // Was it from region 2?
+        {
+            bluePosition = SkystonePosition.CENTER; // Record our analysis
+
+            /*
+             * Draw a solid rectangle on top of the chosen region.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region2_pointA, // First point which defines the rectangle
+                    region2_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    -1); // Negative thickness means solid fill
+        }
+        else if(maxBlue == blueAvg3) // Was it from region 3?
+        {
+            bluePosition = SkystonePosition.RIGHT; // Record our analysis
+
+            /*
+             * Draw a solid rectangle on top of the chosen region.
+             * Simply a visual aid. Serves no functional purpose.
+             */
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region3_pointA, // First point which defines the rectangle
+                    region3_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
 
@@ -300,8 +357,14 @@ public class camera extends OpenCvPipeline {
     /*
      * Call this from the OpMode thread to obtain the latest analysis
      */
-    public SkystonePosition getAnalysis()
+
+    public SkystonePosition getRedAnalysis()
     {
-        return position;
+        return redPosition;
+    }
+
+    public SkystonePosition getBlueAnalysis()
+    {
+        return bluePosition;
     }
 }
