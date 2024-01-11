@@ -40,10 +40,10 @@ public class teleopOff extends LinearOpMode {
         CRServo back_right_servo = hardwareMap.crservo.get("back_right_servo");
         CRServo front_left_servo = hardwareMap.crservo.get("front_left_servo");
         CRServo front_right_servo = hardwareMap.crservo.get("front_right_servo");
-        fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        // fl.setDirection(DcMotorSimple.Direction.REVERSE);
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
-        bl.setDirection(DcMotorSimple.Direction.REVERSE);
-        //br.setDirection(DcMotorSimple.Direction.REVERSE);
+        // bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /* lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

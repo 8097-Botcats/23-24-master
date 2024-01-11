@@ -27,22 +27,31 @@ public class teleopOff2 extends LinearOpMode {
         DcMotor fr = hardwareMap.dcMotor.get("front_right_motor");
         DcMotor bl = hardwareMap.dcMotor.get("back_left_motor");
         DcMotor br = hardwareMap.dcMotor.get("back_right_motor");
-        DcMotor fourBar = hardwareMap.dcMotor.get("4bar_motor");
+
+        DcMotor left_slide_motor = hardwareMap.dcMotor.get("left_slide_motor");
+        DcMotor right_slide_motor = hardwareMap.dcMotor.get("right_slide_motor");
 
         double ENCODERTICKS = 537.7;
 
-        CRServo back_left_servo = hardwareMap.crservo.get("back_left_servo");
-        CRServo back_right_servo = hardwareMap.crservo.get("back_right_servo");
-        CRServo front_left_servo = hardwareMap.crservo.get("front_left_servo");
-        CRServo front_right_servo = hardwareMap.crservo.get("front_right_servo");
+        CRServo left_intake = hardwareMap.crservo.get("left_intake");
+        CRServo right_intake = hardwareMap.crservo.get("right_intake");
 
-        Servo outtake = hardwareMap.servo.get("4bar_servo");
+        Servo left_claw_servo = hardwareMap.servo.get("left_claw_servo");
+        Servo right_claw_servo = hardwareMap.servo.get("right_claw_servo");
 
-        fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        Servo left_slide_servo = hardwareMap.servo.get("left_slide_servo");
+        Servo right_slide_servo = hardwareMap.servo.get("right_slide_servo");
+
+        Servo tilt = hardwareMap.servo.get("tilt");
+        Servo launch = hardwareMap.servo.get("launch");
+
+        // fl.setDirection(DcMotorSimple.Direction.REVERSE);
         fr.setDirection(DcMotorSimple.Direction.REVERSE);
-        bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        // bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        fourBar.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        left_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        right_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         double driveSpeed = 0.4;
         final int liftHome = 0;
@@ -50,6 +59,8 @@ public class teleopOff2 extends LinearOpMode {
         double finalAngle;
         double robotAngle;
         boolean speedToggle = true;
+        boolean launching = false;
+        boolean launchRED = true;
         boolean aButton = true;
         boolean yButton = true;
         boolean xButton = true;
@@ -58,6 +69,8 @@ public class teleopOff2 extends LinearOpMode {
         double slowRelease = 0.3;
 
         double liftEncoder = 0;
+
+        double enc = .5;
 
         Orientation angles;
         IMU imu;
@@ -133,14 +146,14 @@ public class teleopOff2 extends LinearOpMode {
 
             // DRIVER 2
 
+            // ! TEST THESE INDIVIDUAL TO KEEP OUTTAKE ALIGNMENT
             if(gamepad2.left_stick_y != 0){
-                fourBar.setPower(gamepad2.left_stick_x/2);
-            }
-            else if(gamepad2.left_trigger > 0) {
-                fourBar.setPower(-0.3);
+                left_slide_motor.setPower(gamepad2.left_stick_x/2);
+                //right_slide_motor.setPower(gamepad2.left_stick_x/2);
             }
             else {
-                fourBar.setPower(0);
+                left_slide_motor.setPower(0);
+                //right_slide_motor.setPower(0);
             }
 
             /* if (gamepad2.a && aButton){
@@ -157,37 +170,77 @@ public class teleopOff2 extends LinearOpMode {
             } */
 
             if(gamepad2.right_bumper) {
-                front_left_servo.setPower(-1);
-                front_right_servo.setPower(1);
-                back_left_servo.setPower(-1);
-                back_right_servo.setPower(1);
+                left_intake.setPower(-1);
+                right_intake.setPower(1);
             }
             if(gamepad2.left_bumper) {
-                front_left_servo.setPower(1);
-                front_right_servo.setPower(-1);
-                back_left_servo.setPower(1);
-                back_right_servo.setPower(-1);
+                left_intake.setPower(1);
+                right_intake.setPower(-1);
             }
             if(!gamepad2.right_bumper && !gamepad2.left_bumper) {
-                front_left_servo.setPower(0);
-                front_right_servo.setPower(0);
-                back_left_servo.setPower(0);
-                back_right_servo.setPower(0);
+                left_intake.setPower(0);
+                right_intake.setPower(0);
             }
 
+            // ! TEST THESE INDIVIDUALLY
+            if (gamepad2.dpad_down) {
+                left_slide_servo.setPosition(0);
+                // right_slide_servo.setPosition(0);
+            }
+            if (gamepad2.dpad_up) {
+                left_slide_servo.setPosition(0.5);
+                // right_slide_servo.setPosition(0.5);
+            }
+            if(gamepad2.dpad_left) {
+                left_claw_servo.setPosition(0);
+            }
+            if(gamepad2.dpad_right) {
+                right_claw_servo.setPosition(0);
+            }
+            if(gamepad2.x) {
+                left_claw_servo.setPosition(0.5);
+            }
+            if(gamepad2.b) {
+                right_claw_servo.setPosition(0.5);
+            }
 
-            if (gamepad2.x) {
-                outtake.setPosition(0.05);
+            if(gamepad2.y && launchRED) {
+                launchRED = false;
+                //launching = !launching;
+                if(launching){
+                    launching = false;
+                }
+                if(!launching){
+                    launching = true;
+                }
             }
-            if (gamepad2.b) {
-                outtake.setPosition(0.9);
+            else if(!gamepad2.y && !launchRED) {launchRED = true;}
+
+            if(!launching) {
+                tilt.setPosition(0.55);
+                launch.setPosition(0.85);
+
             }
-            if(gamepad2.y) {
-                outtake.setPosition(0.5);
+            if(launching) {
+                tilt.setPosition(0.45);
             }
+
+            if(gamepad2.a) {
+                launch.setPosition(0.5);
+            }
+
+            // if(gamepad2.dpad_up) {enc += 0.01;}
+            // if(gamepad2.dpad_down) {enc -= 0.01;}
+
 
             telemetry.addData("Drive Speed", driveSpeed);
             telemetry.addData("Field Centric", fieldCentric);
+            telemetry.addData("flEncoder", fl.getCurrentPosition());
+            telemetry.addData("frEncoder", fr.getCurrentPosition());
+            telemetry.addData("blEncoder", bl.getCurrentPosition());
+            telemetry.addData("brEncoder", br.getCurrentPosition());
+
+            telemetry.addData("increments", enc);
             // telemetry.addData("lift1 enc ticks", lift1.getCurrentPosition());
             // telemetry.addData("lift2 enc ticks", lift2.getCurrentPosition());
             telemetry.update();

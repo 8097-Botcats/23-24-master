@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -17,20 +18,20 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-@Autonomous(name="RED_RIGHT_AUTO", group="cvAutos")
+@Autonomous(name="RED_RIGHT_AUTO 2", group="cvAutos")
 //RED TOP STARTING PLACE
-public class RED_RIGHT_AUTO extends LinearOpMode {
+public class newRedRightAuto extends LinearOpMode {
 
     double CIRCUMFERENCEOFWHEEL = 298.5; //mm
     double ENCODERTICKS = 537.7;
     double GEARRATIO = 1;
     double TICKSTOMMTRAVEL = (CIRCUMFERENCEOFWHEEL/ENCODERTICKS) * GEARRATIO;
 
-    Robot robot = new Robot();
+    //Robot robot = new Robot();
 
     public void runOpMode() {
 
-        robot.init(hardwareMap,telemetry);
+        //robot.init(hardwareMap,telemetry);
         OpenCvWebcam webcam;
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
@@ -62,51 +63,78 @@ public class RED_RIGHT_AUTO extends LinearOpMode {
         CRServo front_left_servo = hardwareMap.crservo.get("front_left_servo");
         CRServo front_right_servo = hardwareMap.crservo.get("front_right_servo");
 
-        fourBar.setTargetPosition(200);
+        Servo tilt = hardwareMap.servo.get("tilt");
+        Servo launch = hardwareMap.servo.get("launch");
+
+        fourBar.setTargetPosition(-10);
         fourBar.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         int beacon = 0;
 
-        Pose2d startPos = new Pose2d(0, 0, 0);
-        Pose2d pLeft = new Pose2d(28, 4, Math.toRadians(-90));
-        Pose2d pCenter = new Pose2d(44, 0, Math.toRadians(0));
-        Pose2d pRight = new Pose2d(28, -4, Math.toRadians(90));
-        Pose2d leftPlacement = new Pose2d(37, -40, Math.toRadians(-90));
-        Pose2d centerPlacement = new Pose2d(29, -40, Math.toRadians(-90));
-        Pose2d rightPlacement = new Pose2d(21, -40, Math.toRadians(-90));
-        Pose2d parking = new Pose2d(14, -40, Math.toRadians(-90));
+        Pose2d startPos = new Pose2d(65, 12, Math.toRadians(0));
+        Pose2d depositRight = new Pose2d(30, 12, Math.toRadians(270));
+        Pose2d depositLeft = new Pose2d(30, 12, Math.toRadians(90));
+        Pose2d depositCenter = new Pose2d(36, 12, Math.toRadians(0));
+        Pose2d placeLeft = new Pose2d(28, 54, Math.toRadians(90));
+        Pose2d placeCenter = new Pose2d(36, 56, Math.toRadians(90));
+        Pose2d placeRight = new Pose2d(44, 54, Math.toRadians(90));
+        Pose2d parking = new Pose2d(60, 50, Math.toRadians(180));
+
+        drive.setPoseEstimate(startPos);
 
         TrajectorySequence purpleLeft = drive.trajectorySequenceBuilder(startPos)
-                .forward(28)
-                .turn(-1 * Math.toRadians(90))
-                .back(4)
+                .back(10)
+                .strafeLeft(10)
+                .lineToLinearHeading(depositLeft)
+                //.forward(10)
+                //.turn(Math.toRadians(90))
                 .build();
 
         TrajectorySequence purpleMid = drive.trajectorySequenceBuilder(startPos)
-                .forward(34)
+                .lineToLinearHeading(depositCenter)
+                //.turn(180)
+                //.forward(15)
                 .build();
 
         TrajectorySequence purpleRight = drive.trajectorySequenceBuilder(startPos)
-                .forward(28)
-                .turn(Math.toRadians(90))
-                .back(4)
+                .lineToLinearHeading(depositRight)
+                //.turn(Math.toRadians(-90))
+                //.forward(10)
+                //.turn(Math.toRadians(-90))
                 .build();
 
-        TrajectorySequence leftBackboard = drive.trajectorySequenceBuilder(pLeft)
-                .lineToLinearHeading(leftPlacement)
+        TrajectorySequence yellowLeft = drive.trajectorySequenceBuilder(depositLeft)
+                .lineToLinearHeading(placeLeft)
                 .build();
 
-        TrajectorySequence centerBackboard = drive.trajectorySequenceBuilder(pCenter)
-                .forward(6)
-                .lineToLinearHeading(centerPlacement)
+        TrajectorySequence yellowMid = drive.trajectorySequenceBuilder(depositCenter)
+                .forward(4)
+                .lineToLinearHeading(placeCenter)
                 .build();
 
-        TrajectorySequence rightBackboard = drive.trajectorySequenceBuilder(pRight)
+        TrajectorySequence yellowRight = drive.trajectorySequenceBuilder(depositRight)
                 .strafeLeft(24)
-                .lineToLinearHeading(rightPlacement)
+                .lineToLinearHeading(placeRight)
                 .build();
+
+        TrajectorySequence parkFromMid = drive.trajectorySequenceBuilder(placeCenter)
+                .back(5)
+                .lineToLinearHeading(parking)
+                .build();
+
+        TrajectorySequence parkFromLeft = drive.trajectorySequenceBuilder(placeLeft)
+                .back(5)
+                .lineToLinearHeading(parking)
+                .build();
+
+        TrajectorySequence parkFromRight = drive.trajectorySequenceBuilder(placeRight)
+                .back(5)
+                .lineToLinearHeading(parking)
+                .build();
+
+
 
         DcMotor fl = null;
         DcMotor fr = null;
@@ -177,20 +205,26 @@ public class RED_RIGHT_AUTO extends LinearOpMode {
             if(beacon == 2) {drive.followTrajectorySequence(purpleRight);}
             // drive.followTrajectorySequence(test);
 
-            front_left_servo.setPower(1);
-            front_right_servo.setPower(-1);
-            back_left_servo.setPower(1);
-            back_right_servo.setPower(-1);
-            sleep(1000);
+            front_left_servo.setPower(0.1);
+            front_right_servo.setPower(-0.1);
+            back_left_servo.setPower(0.1);
+            back_right_servo.setPower(-0.1);
+            sleep(4000);
+            front_left_servo.setPower(0);
+            front_right_servo.setPower(0);
+            back_left_servo.setPower(0);
+            back_right_servo.setPower(0);
 
-            /* if(beacon == 1) {drive.followTrajectorySequence(centerBackboard);}
-            if(beacon == 0) {drive.followTrajectorySequence(leftBackboard);}
-            if(beacon == 2) {drive.followTrajectorySequence(rightBackboard);}
+            if(beacon == 1) {drive.followTrajectorySequence(yellowMid);}
+            if(beacon == 0) {drive.followTrajectorySequence(yellowLeft);}
+            if(beacon == 2) {drive.followTrajectorySequence(yellowRight);}
 
-            fourBar.setTargetPosition(200);
-            fourBar.setPower(0.5);
+            while(fourBar.isBusy()) {
+                fourBar.setTargetPosition(-1000);
+                fourBar.setPower(1);
+            }
 
-            outtake.setPosition(0.05); */
+            outtake.setPosition(0.05);
         }
     }
 }

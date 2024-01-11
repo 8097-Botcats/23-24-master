@@ -51,9 +51,9 @@ public class camera extends OpenCvPipeline {
     /*
      * The core values which define the location and size of the sample regions
      */
-    static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(1,160);
-    static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(141,160);
-    static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(200,160);
+    static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(1,100);
+    static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(150,80);
+    static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(299,100);
 
     static final int REGION_WIDTH = 20;
     static final int REGION_HEIGHT = 20;
@@ -266,7 +266,7 @@ public class camera extends OpenCvPipeline {
                     RED, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(maxRed == avg2) // Was it from region 2?
+        if(maxRed == avg2) // Was it from region 2?
         {
             redPosition = SkystonePosition.CENTER; // Record our analysis
 
@@ -281,7 +281,7 @@ public class camera extends OpenCvPipeline {
                     RED, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(maxRed == avg3) // Was it from region 3?
+        if(maxRed == avg3) // Was it from region 3?
         {
             redPosition = SkystonePosition.RIGHT; // Record our analysis
 
@@ -312,7 +312,7 @@ public class camera extends OpenCvPipeline {
                     BLUE, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(maxBlue == blueAvg2) // Was it from region 2?
+        if(maxBlue == blueAvg2) // Was it from region 2?
         {
             bluePosition = SkystonePosition.CENTER; // Record our analysis
 
@@ -327,7 +327,7 @@ public class camera extends OpenCvPipeline {
                     BLUE, // The color the rectangle is drawn in
                     -1); // Negative thickness means solid fill
         }
-        else if(maxBlue == blueAvg3) // Was it from region 3?
+        if(maxBlue == blueAvg3) // Was it from region 3?
         {
             bluePosition = SkystonePosition.RIGHT; // Record our analysis
 
@@ -358,10 +358,7 @@ public class camera extends OpenCvPipeline {
      * Call this from the OpMode thread to obtain the latest analysis
      */
 
-    public SkystonePosition getRedAnalysis()
-    {
-        return redPosition;
-    }
+    public SkystonePosition getRedAnalysis() {return redPosition;}
 
     public SkystonePosition getBlueAnalysis()
     {
