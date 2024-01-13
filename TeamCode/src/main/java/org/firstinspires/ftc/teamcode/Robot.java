@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -30,15 +31,27 @@ public class Robot {
     DcMotor fr = null;
     DcMotor bl = null;
     DcMotor br = null;
-    DcMotor lift1 = null;
-    DcMotor lift2 = null;
+    DcMotor left_slide_motor = null;
+    DcMotor right_slide_motor = null;
+
+    TouchSensor left_touch_sensor = null;
+    TouchSensor right_touch_sensor = null;
+
+    CRServo left_intake = null;
+    CRServo right_intake = null;
+
+    Servo left_claw_servo = null;
+    Servo right_claw_servo = null;
+
+    Servo left_slide_servo = null;
+    Servo right_slide_servo = null;
 
     CRServo sternPort = null;
     CRServo sternStarboard = null;
     CRServo bowPort = null;
     CRServo bowStarboard = null;
     Servo plank = null;
-    DcMotor boom = null;
+    // DcMotor boom = null;
 
     Servo clawServo = null;
 
@@ -54,9 +67,12 @@ public class Robot {
 
     Telemetry telemetry;
 
-    public void init(HardwareMap ahwMap, Telemetry tele) { //pass in hardwaremap and telemetry in the code to init stuff
+    /*public Robot(HardwareMap ahwMap, Telemetry tele) {
         hwMap = ahwMap;
         telemetry = tele;
+
+        telemetry.addData("started: ", true);
+        telemetry.update();
 
         imu = hwMap.get(IMU.class, "imu");
         IMU.Parameters myIMUparameters;
@@ -71,38 +87,95 @@ public class Robot {
         // Wait for the game to start (driver presses PLAY)
         imu.initialize(myIMUparameters);
 
-        fl = hwMap.dcMotor.get("front_left_motor");
-        fr = hwMap.dcMotor.get("back_right_motor");
-        bl = hwMap.dcMotor.get("back_left_motor");
-        br = hwMap.dcMotor.get("front_right_motor");
-        // lift1 = hwMap.dcMotor.get("liftMotor1");
-        // lift2 = hwMap.dcMotor.get("liftMotor2");
-        sternPort = hwMap.crservo.get("back_left_servo");
-        sternStarboard = hwMap.crservo.get("back_right_servo");
-        bowPort = hwMap.crservo.get("front_left_servo");
-        bowStarboard = hwMap.crservo.get("front_right_servo");
-        plank = hwMap.servo.get("4bar_servo");
-        boom = hwMap.dcMotor.get("4bar_motor");
+        DcMotor fl = hwMap.dcMotor.get("front_left_motor");
+        DcMotor fr = hwMap.dcMotor.get("front_right_motor");
+        DcMotor bl = hwMap.dcMotor.get("back_left_motor");
+        DcMotor br = hwMap.dcMotor.get("back_right_motor");
 
-        //fl.setDirection(DcMotorSimple.Direction.REVERSE);
-        //bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        DcMotor left_slide_motor = hwMap.dcMotor.get("left_slide_motor");
+        DcMotor right_slide_motor = hwMap.dcMotor.get("right_slide_motor");
+
+        TouchSensor left_touch_sensor = hwMap.touchSensor.get("lefttouch");
+        TouchSensor right_touch_sensor = hwMap.touchSensor.get("righttouch");
+
+        double ENCODERTICKS = 537.7;
+
+        CRServo left_intake = hwMap.crservo.get("left_intake");
+        CRServo right_intake = hwMap.crservo.get("right_intake");
+
+        Servo left_claw_servo = hwMap.servo.get("left_claw_servo");
+        Servo right_claw_servo = hwMap.servo.get("right_claw_servo");
+
+        Servo left_slide_servo = hwMap.servo.get("left_slide_servo");
+        Servo right_slide_servo = hwMap.servo.get("right_slide_servo");
+
+        //Servo tilt = hardwareMap.servo.get("tilt");
+        //Servo launch = hardwareMap.servo.get("launch");
+
+        fl.setDirection(DcMotorSimple.Direction.REVERSE);
         //fr.setDirection(DcMotorSimple.Direction.REVERSE);
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
         //br.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // clawServo = hwMap.servo.get("clawServo");
-        //liftServo = hwMap.crservo.get("liftServo");
 
-        // lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        // lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        left_slide_motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        left_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        right_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        /*imu = hwMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(parameters);
+        telemetry.update();
+    }*/
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);*/
+    public void init(HardwareMap ahwMap, Telemetry tele) { //pass in hardwaremap and telemetry in the code to init stuff
+        hwMap = ahwMap;
+        telemetry = tele;
 
+        imu = ahwMap.get(IMU.class, "imu");
+        IMU.Parameters myIMUparameters;
+
+        myIMUparameters = new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
+                )
+        );
+
+        // Wait for the game to start (driver presses PLAY)
+        imu.initialize(myIMUparameters);
+
+        fl = hwMap.dcMotor.get("front_left_motor");
+        fr = hwMap.dcMotor.get("front_right_motor");
+        bl = hwMap.dcMotor.get("back_left_motor");
+        br = hwMap.dcMotor.get("back_right_motor");
+
+        left_slide_motor = hwMap.dcMotor.get("left_slide_motor");
+        right_slide_motor = hwMap.dcMotor.get("right_slide_motor");
+
+        left_touch_sensor = hwMap.touchSensor.get("lefttouch");
+        right_touch_sensor = hwMap.touchSensor.get("righttouch");
+
+        left_intake = hwMap.crservo.get("left_intake");
+        right_intake = hwMap.crservo.get("right_intake");
+
+        left_claw_servo = hwMap.servo.get("left_claw_servo");
+        right_claw_servo = hwMap.servo.get("right_claw_servo");
+
+        left_slide_servo = hwMap.servo.get("left_slide_servo");
+        right_slide_servo = hwMap.servo.get("right_slide_servo");
+
+        //Servo tilt = hardwareMap.servo.get("tilt");
+        //Servo launch = hardwareMap.servo.get("launch");
+
+        fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        //fr.setDirection(DcMotorSimple.Direction.REVERSE);
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        //br.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
+        left_slide_motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        left_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        right_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        telemetry.update();
     }
 
     public int tickToMM(double mm){
@@ -222,6 +295,24 @@ public class Robot {
         bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    public void setSlidesPos(int ticks) {
+
+        int differenceLeft = -ticks - left_slide_motor.getCurrentPosition();
+        int differenceRight = -ticks - right_slide_motor.getCurrentPosition();
+
+        double avg = (differenceLeft + differenceRight)/2;
+
+        if(avg >= 0) {
+            left_slide_motor.setPower(2 * Math.sqrt(avg / 8100));
+            right_slide_motor.setPower(2 * Math.sqrt(avg / 8100));
+        }
+        else {
+            left_slide_motor.setPower(-2 * Math.sqrt(-avg / 8100));
+            right_slide_motor.setPower(-2 * Math.sqrt(-avg / 8100));
+        }
+    }
+
     public void driveForward(double power) {
         fl.setPower(power);
         fr.setPower(power);
@@ -321,34 +412,7 @@ public class Robot {
         bl.setPower(0);
         br.setPower(0);
     }
-    public void lift(double power, int distance){
-        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        lift1.setTargetPosition(distance);
-        lift2.setTargetPosition(-distance);
-
-        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        lift1.setPower(power);
-        lift2.setPower(power);
-
-        while(lift1.isBusy() && lift2.isBusy()){
-            telemetry.addData("enc Tickes lift1", lift1.getCurrentPosition());
-            telemetry.addData("enc ticks lift2", lift2.getCurrentPosition());
-            telemetry.update();
-        }
-        lift1.setPower(0);
-        lift2.setPower(0);
-
-        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-    public void liftPower(double power){
-        lift1.setPower(power);
-        lift2.setPower(-power);
-    }
     public void openClaw(){
         clawServo.setPosition(.1);
     }

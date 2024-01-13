@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -31,6 +32,9 @@ public class teleopOff2 extends LinearOpMode {
         DcMotor left_slide_motor = hardwareMap.dcMotor.get("left_slide_motor");
         DcMotor right_slide_motor = hardwareMap.dcMotor.get("right_slide_motor");
 
+        TouchSensor left_touch_sensor = hardwareMap.touchSensor.get("lefttouch");
+        TouchSensor right_touch_sensor = hardwareMap.touchSensor.get("righttouch");
+
         double ENCODERTICKS = 537.7;
 
         CRServo left_intake = hardwareMap.crservo.get("left_intake");
@@ -42,14 +46,16 @@ public class teleopOff2 extends LinearOpMode {
         Servo left_slide_servo = hardwareMap.servo.get("left_slide_servo");
         Servo right_slide_servo = hardwareMap.servo.get("right_slide_servo");
 
-        Servo tilt = hardwareMap.servo.get("tilt");
-        Servo launch = hardwareMap.servo.get("launch");
+        //Servo tilt = hardwareMap.servo.get("tilt");
+        //Servo launch = hardwareMap.servo.get("launch");
 
-        // fl.setDirection(DcMotorSimple.Direction.REVERSE);
-        fr.setDirection(DcMotorSimple.Direction.REVERSE);
-        // bl.setDirection(DcMotorSimple.Direction.REVERSE);
-        br.setDirection(DcMotorSimple.Direction.REVERSE);
+         fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        //fr.setDirection(DcMotorSimple.Direction.REVERSE);
+         bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        //br.setDirection(DcMotorSimple.Direction.REVERSE);
 
+
+        left_slide_motor.setDirection(DcMotorSimple.Direction.REVERSE);
         left_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         right_slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -65,6 +71,8 @@ public class teleopOff2 extends LinearOpMode {
         boolean yButton = true;
         boolean xButton = true;
         boolean bButton = true;
+
+        boolean tSensorRising = false;
 
         double slowRelease = 0.3;
 
@@ -148,13 +156,27 @@ public class teleopOff2 extends LinearOpMode {
 
             // ! TEST THESE INDIVIDUAL TO KEEP OUTTAKE ALIGNMENT
             if(gamepad2.left_stick_y != 0){
-                left_slide_motor.setPower(gamepad2.left_stick_x/2);
-                //right_slide_motor.setPower(gamepad2.left_stick_x/2);
+                left_slide_motor.setPower(gamepad2.left_stick_y);
+                right_slide_motor.setPower(gamepad2.left_stick_y);
             }
             else {
                 left_slide_motor.setPower(0);
-                //right_slide_motor.setPower(0);
+                right_slide_motor.setPower(0);
             }
+
+            if(left_touch_sensor.isPressed() && right_touch_sensor.isPressed() && !tSensorRising) {
+                left_slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                right_slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                tSensorRising = true;
+            }
+            if(left_touch_sensor.isPressed() && right_touch_sensor.isPressed() && tSensorRising) {
+                left_slide_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                right_slide_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+            if(!left_touch_sensor.isPressed() && !right_touch_sensor.isPressed() && tSensorRising) {
+                tSensorRising = false;
+            }
+
 
             /* if (gamepad2.a && aButton){
                 aButton = false;
@@ -169,7 +191,8 @@ public class teleopOff2 extends LinearOpMode {
                 aButton = true;
             } */
 
-            if(gamepad2.right_bumper) {
+            if(gamepad2.right_bumper && running) {
+                running
                 left_intake.setPower(-1);
                 right_intake.setPower(1);
             }
@@ -184,24 +207,26 @@ public class teleopOff2 extends LinearOpMode {
 
             // ! TEST THESE INDIVIDUALLY
             if (gamepad2.dpad_down) {
-                left_slide_servo.setPosition(0);
+                left_slide_servo.setPosition(0.7);
+                right_slide_servo.setPosition(0.4);
                 // right_slide_servo.setPosition(0);
             }
             if (gamepad2.dpad_up) {
-                left_slide_servo.setPosition(0.5);
+                left_slide_servo.setPosition(0.48);
+                right_slide_servo.setPosition(0.62);
                 // right_slide_servo.setPosition(0.5);
             }
             if(gamepad2.dpad_left) {
-                left_claw_servo.setPosition(0);
+                left_claw_servo.setPosition(0.4);
             }
             if(gamepad2.dpad_right) {
-                right_claw_servo.setPosition(0);
+                right_claw_servo.setPosition(0.3);
             }
             if(gamepad2.x) {
-                left_claw_servo.setPosition(0.5);
+                left_claw_servo.setPosition(0);
             }
             if(gamepad2.b) {
-                right_claw_servo.setPosition(0.5);
+                right_claw_servo.setPosition(0.7);
             }
 
             if(gamepad2.y && launchRED) {
@@ -216,7 +241,7 @@ public class teleopOff2 extends LinearOpMode {
             }
             else if(!gamepad2.y && !launchRED) {launchRED = true;}
 
-            if(!launching) {
+            /*if(!launching) {
                 tilt.setPosition(0.55);
                 launch.setPosition(0.85);
 
@@ -227,10 +252,11 @@ public class teleopOff2 extends LinearOpMode {
 
             if(gamepad2.a) {
                 launch.setPosition(0.5);
-            }
+            }*/
 
             // if(gamepad2.dpad_up) {enc += 0.01;}
             // if(gamepad2.dpad_down) {enc -= 0.01;}
+
 
 
             telemetry.addData("Drive Speed", driveSpeed);
@@ -239,10 +265,11 @@ public class teleopOff2 extends LinearOpMode {
             telemetry.addData("frEncoder", fr.getCurrentPosition());
             telemetry.addData("blEncoder", bl.getCurrentPosition());
             telemetry.addData("brEncoder", br.getCurrentPosition());
+            telemetry.addData("STICKY", gamepad2.left_stick_y);
 
             telemetry.addData("increments", enc);
-            // telemetry.addData("lift1 enc ticks", lift1.getCurrentPosition());
-            // telemetry.addData("lift2 enc ticks", lift2.getCurrentPosition());
+            telemetry.addData("lift1 enc ticks", left_slide_motor.getCurrentPosition());
+            telemetry.addData("lift2 enc ticks", right_slide_motor.getCurrentPosition());
             telemetry.update();
         }
     }
